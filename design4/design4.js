@@ -1,50 +1,46 @@
-/*
-@title: map
-@author: Sher
-@snapshot: snapshot1.png
-*/
+// Import Blot toolkit functions
+const { Turtle, scale, translate, drawLines } = bt;
 
+// Set the dimensions of the document
 const width = 1000;
 const height = 600;
 setDocDimensions(width, height);
 
 // Function to generate a pseudo-random number based on date and time
 const pseudoRandom = (seed) => {
-    return Math.abs(Math.sin(seed) * 10000 % 1);
+    return Math.sin(seed) * 10000 % 1;
 };
 
-// Function to generate procedural coordinates
-const generateCoordinates = (numPoints, seed, xRange, yRange) => {
-    const coordinates = [];
-    let angle = 0;
-    const angleIncrement = (2 * Math.PI) / numPoints;
-
-    for (let i = 0; i < numPoints; i++) {
-        const x = xRange * pseudoRandom(seed + i) * Math.cos(angle);
-        const y = yRange * pseudoRandom(seed + i) * Math.sin(angle);
-        coordinates.push([x, y]);
-        angle += angleIncrement;
-    }
-
-    return coordinates;
+// Function to create deterministic variation
+const varyCoord = (coord, seed) => {
+    const variation = pseudoRandom(seed) * 10 - 5; // Vary between -5 and 5
+    return coord + variation;
 };
 
-// Function to create continents
-const createContinent = (numPoints, seed, xRange, yRange, offsetX, offsetY) => {
-    const points = generateCoordinates(numPoints, seed, xRange, yRange);
-    return points.map(([x, y]) => [x + offsetX, y + offsetY]).concat([null]);
+// Generate varying world map coordinates
+const generateWorldMap = (baseMap, seed) => {
+    return baseMap.map(segment => segment === null ? null : [varyCoord(segment[0], seed), varyCoord(segment[1], seed)]);
 };
+
+// Base world map coordinates
+const baseWorldMap = [
+    // North America
+    [-130, 55], [-60, 60], [-45, 40], [-65, 30], [-85, 15], [-100, 25], [-120, 30], [-130, 55], null,
+    // South America
+    [-85, 15], [-65, -5], [-45, -25], [-40, -50], [-55, -60], [-70, -55], [-85, -30], [-85, 15], null,
+    // Europe
+    [0, 55], [10, 50], [20, 55], [30, 60], [20, 65], [10, 60], [0, 55], null,
+    // Africa
+    [10, 50], [20, 45], [25, 35], [20, 10], [10, -10], [5, -25], [0, -35], [10, -35], [20, -10], [10, 50], null,
+    // Asia
+    [20, 65], [30, 70], [50, 70], [60, 60], [70, 40], [80, 20], [90, 10], [85, 0], [70, 0], [60, 20], [50, 30], [30, 60], [20, 65], null,
+    // Australia
+    [110, -10], [120, -15], [135, -25], [150, -30], [150, -40], [140, -45], [130, -40], [120, -35], [110, -30], [110, -10]
+];
 
 // Generate varying world map using current date and time as seed
 const dateSeed = new Date().getTime();
-const worldMap = [
-    ...createContinent(8, dateSeed, 70, 50, -100, 40), // North America
-    ...createContinent(8, dateSeed + 1000, 50, 70, -60, -20), // South America
-    ...createContinent(6, dateSeed + 2000, 30, 20, 20, 55), // Europe
-    ...createContinent(10, dateSeed + 3000, 40, 60, 20, 0), // Africa
-    ...createContinent(12, dateSeed + 4000, 90, 70, 50, 30), // Asia
-    ...createContinent(8, dateSeed + 5000, 30, 20, 130, -20) // Australia
-];
+const worldMap = generateWorldMap(baseWorldMap, dateSeed);
 
 const scaleAndTranslate = (coords, scale, offsetX, offsetY) => {
     return coords.map(([x, y]) => [
